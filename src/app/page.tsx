@@ -2,10 +2,11 @@ import Link from 'next/link'
 import { ArrowRight, Sparkles, Users, Palette } from 'lucide-react'
 import { getFeaturedEvents } from '@/lib/supabase'
 import { EventCard } from '@/components/event-card'
+import { Event } from '@/types'
 
 export default async function HomePage() {
-  let featuredEvents = []
-  
+  let featuredEvents: Event[] = []
+
   try {
     featuredEvents = await getFeaturedEvents()
   } catch (error) {
@@ -18,35 +19,35 @@ export default async function HomePage() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-cream via-warm-beige to-cream dark:from-dark-cream dark:via-dark-warm-beige dark:to-dark-cream" />
-        
+
         {/* decorative elements */}
         <div className="absolute top-20 left-10 w-64 h-64 bg-sage-green/20 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-terracotta/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-        
+
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="animate-fade-in">
             <span className="inline-block px-4 py-2 rounded-full bg-sage-green/20 text-mocha-brown dark:text-warm-beige text-sm font-medium mb-6">
               Curated Social Experiences
             </span>
           </div>
-          
+
           <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl font-semibold text-mocha-brown dark:text-warm-beige mb-6 animate-slide-up">
             Koko Kollective
           </h1>
-          
+
           <p className="text-lg md:text-xl text-soft-brown/80 dark:text-warm-beige/80 max-w-2xl mx-auto mb-10 leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            An inclusive BIPOC community-led platform creating intentional spaces 
+            An inclusive BIPOC community-led platform creating intentional spaces
             for connection, creativity, and authentic self-expression.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <Link href="/events" className="btn-primary">
               Explore Events
               <ArrowRight size={18} />
             </Link>
-            <a 
-              href="https://www.instagram.com/kokokollectiveuk" 
-              target="_blank" 
+            <a
+              href="https://www.instagram.com/kokokollectiveuk"
+              target="_blank"
               rel="noopener noreferrer"
               className="btn-outline"
             >
@@ -83,7 +84,7 @@ export default async function HomePage() {
                 Paint & Sip Sessions
               </h3>
               <p className="text-soft-brown/70 dark:text-warm-beige/70 text-sm leading-relaxed">
-                Unleash your creativity in a relaxed, social atmosphere. 
+                Unleash your creativity in a relaxed, social atmosphere.
                 No experience needed - just bring yourself and good vibes.
               </p>
             </div>
@@ -97,7 +98,7 @@ export default async function HomePage() {
                 Social Games
               </h3>
               <p className="text-soft-brown/70 dark:text-warm-beige/70 text-sm leading-relaxed">
-                Break the ice and make genuine connections through curated 
+                Break the ice and make genuine connections through curated
                 games designed to spark meaningful conversations.
               </p>
             </div>
@@ -111,7 +112,7 @@ export default async function HomePage() {
                 Themed Experiences
               </h3>
               <p className="text-soft-brown/70 dark:text-warm-beige/70 text-sm leading-relaxed">
-                From creative workshops to cultural celebrations, our themed 
+                From creative workshops to cultural celebrations, our themed
                 events celebrate identity and self-expression.
               </p>
             </div>
@@ -129,8 +130,8 @@ export default async function HomePage() {
                 Featured Events
               </h2>
             </div>
-            <Link 
-              href="/events" 
+            <Link
+              href="/events"
               className="text-mocha-brown dark:text-warm-beige font-medium hover:text-terracotta transition-colors inline-flex items-center gap-2"
             >
               View all events
@@ -169,8 +170,8 @@ export default async function HomePage() {
             A Space for Community
           </h2>
           <p className="text-lg text-warm-beige/80 max-w-3xl mx-auto mb-10 leading-relaxed">
-            Koko Kollective prioritises intentional connection and cultural inclusivity. 
-            Our events are designed as welcoming social spaces for BIPOC communities, 
+            Koko Kollective prioritises intentional connection and cultural inclusivity.
+            Our events are designed as welcoming social spaces for BIPOC communities,
             diaspora attendees, Black queer individuals, and respectful allies.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
@@ -197,7 +198,7 @@ export default async function HomePage() {
             Join Our Community
           </h2>
           <p className="text-soft-brown/70 dark:text-warm-beige/70 mb-8 max-w-xl mx-auto">
-            Follow us on Instagram for event updates, behind-the-scenes content, 
+            Follow us on Instagram for event updates, behind-the-scenes content,
             and a glimpse into our vibrant community.
           </p>
           <a

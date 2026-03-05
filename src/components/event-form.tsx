@@ -3,7 +3,8 @@
 import { useState, useRef } from 'react'
 import { X, Upload, Image as ImageIcon, XCircle } from 'lucide-react'
 import { Event, EventFormData } from '@/types'
-import { createEvent, updateEvent, uploadImage } from '@/lib/supabase'
+import { uploadImage } from '@/lib/supabase'
+import { createEventAction, updateEventAction } from '@/app/admin/events/actions'
 
 interface EventFormProps {
   event: Event | null
@@ -69,13 +70,13 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
   const removeGalleryImage = (index: number) => {
     const newImages = [...galleryImages]
     const newPreviews = [...galleryPreviews]
-    
+
     // if it's a file that hasn't been uploaded yet
     if (index < galleryImages.length) {
       newImages.splice(index, 1)
       URL.revokeObjectURL(galleryPreviews[index])
     }
-    
+
     newPreviews.splice(index, 1)
     setGalleryImages(newImages)
     setGalleryPreviews(newPreviews)
@@ -110,12 +111,14 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
 
       let result
       if (event) {
-        result = await updateEvent(event.id, eventData)
+        result = await updateEventAction(event.id, eventData)
       } else {
-        result = await createEvent(eventData)
+        result = await createEventAction(eventData)
       }
 
-      if (result) {
+      if (result.error) {
+        setError(result.error)
+      } else if (result.data) {
         onSuccess()
       } else {
         setError('Failed to save event. Please try again.')
@@ -332,7 +335,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
                 onChange={handleFeaturedImageChange}
                 className="hidden"
               />
-              
+
               {featuredImagePreview ? (
                 <div className="relative inline-block">
                   <img
@@ -378,7 +381,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
                 onChange={handleGalleryImagesChange}
                 className="hidden"
               />
-              
+
               <div className="flex flex-wrap gap-4">
                 {galleryPreviews.map((preview, index) => (
                   <div key={index} className="relative">
@@ -396,7 +399,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
                     </button>
                   </div>
                 ))}
-                
+
                 <button
                   type="button"
                   onClick={() => galleryInputRef.current?.click()}

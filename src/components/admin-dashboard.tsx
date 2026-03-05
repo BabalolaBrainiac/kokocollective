@@ -1,26 +1,40 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, LogOut, Calendar, Edit2, Trash2, Eye, EyeOff, Star } from 'lucide-react'
-import { supabase, getEvents, deleteEvent } from '@/lib/supabase'
+import { Plus, LogOut, Calendar, Edit2, Trash2, Eye, EyeOff, Star, Mail, CheckCircle, Circle } from 'lucide-react'
+import { getEvents, getContactMessages, updateMessageStatus } from '@/lib/supabase'
 import { Event } from '@/types'
 import { EventForm } from './event-form'
 import { formatDate, formatCurrency } from '@/lib/utils'
 
+import { logoutAction } from '@/app/admin/actions'
+import { deleteEventAction, togglePublishAction, toggleFeaturedAction } from '@/app/admin/events/actions'
+import { useRouter } from 'next/navigation'
+
 interface AdminDashboardProps {
-  onLogout: () => void
+  session: any
 }
 
-export function AdminDashboard({ onLogout }: AdminDashboardProps) {
+export function AdminDashboard({ session }: AdminDashboardProps) {
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
+  // New States
+  const [activeTab, setActiveTab] = useState<'events' | 'messages'>('events')
+  const [messages, setMessages] = useState<any[]>([])
+
+  const router = useRouter()
+
   useEffect(() => {
-    loadEvents()
-  }, [])
+    if (activeTab === 'events') {
+      loadEvents()
+    } else if (activeTab === 'messages') {
+      loadMessages()
+    }
+  }, [activeTab])
 
   const loadEvents = async () => {
     setIsLoading(true)
@@ -29,21 +43,36 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setIsLoading(false)
   }
 
-  const handleDelete = async (id: string) => {
-    const success = await deleteEvent(id)
+  const loadMessages = async () => {
+    setIsLoading(true)
+    const allMsgs = await getContactMessages()
+    setMessages(allMsgs)
+    setIsLoading(false)
+  }
+
+  const handleToggleMessageStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'unread' ? 'read' : 'unread'
+    const success = await updateMessageStatus(id, newStatus)
     if (success) {
+      setMessages(messages.map(m => m.id === id ? { ...m, status: newStatus } : m))
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    const result = await deleteEventAction(id)
+    if (result.success) {
       setEvents(events.filter(e => e.id !== id))
       setDeleteConfirm(null)
     }
   }
 
+  const handleLogout = async () => {
+    await logoutAction()
+    router.refresh()
+  }
+
   const handleTogglePublish = async (event: Event) => {
-    const { data, error } = await supabase
-      .from('events')
-      .update({ is_published: !event.is_published })
-      .eq('id', event.id)
-      .select()
-      .single()
+    const { data, error } = await togglePublishAction(event.id, event.is_published)
 
     if (!error && data) {
       setEvents(events.map(e => e.id === event.id ? data : e))
@@ -51,12 +80,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   }
 
   const handleToggleFeatured = async (event: Event) => {
-    const { data, error } = await supabase
-      .from('events')
-      .update({ is_featured: !event.is_featured })
-      .eq('id', event.id)
-      .select()
-      .single()
+    const { data, error } = await toggleFeaturedAction(event.id, event.is_featured)
 
     if (!error && data) {
       setEvents(events.map(e => e.id === event.id ? data : e))
@@ -69,21 +93,62 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       <header className="bg-white dark:bg-dark-warm-beige shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <h1 className="font-serif text-xl font-semibold text-mocha-brown dark:text-warm-beige">
                 Admin Dashboard
               </h1>
+              <nav className="hidden sm:flex items-center gap-2 border-l pl-6 border-warm-beige dark:border-dark-warm-beige">
+                <button
+                  onClick={() => setActiveTab('events')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${activeTab === 'events'
+                    ? 'bg-warm-beige/50 dark:bg-dark-warm-beige text-terracotta font-medium'
+                    : 'text-soft-brown/60 dark:text-warm-beige/60 hover:bg-warm-beige/30 dark:hover:bg-dark-warm-beige/30'
+                    }`}
+                >
+                  Events
+                </button>
+                <button
+                  onClick={() => setActiveTab('messages')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${activeTab === 'messages'
+                    ? 'bg-warm-beige/50 dark:bg-dark-warm-beige text-terracotta font-medium'
+                    : 'text-soft-brown/60 dark:text-warm-beige/60 hover:bg-warm-beige/30 dark:hover:bg-dark-warm-beige/30'
+                    }`}
+                >
+                  Messages
+                  {messages.filter(m => m.status === 'unread').length > 0 && (
+                    <span className="ml-2 bg-terracotta text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                      {messages.filter(m => m.status === 'unread').length}
+                    </span>
+                  )}
+                </button>
+              </nav>
             </div>
             <div className="flex items-center gap-4">
-              <a 
-                href="/" 
+              <a
+                href="/"
                 target="_blank"
                 className="text-sm text-soft-brown/60 dark:text-warm-beige/60 hover:text-terracotta transition-colors"
               >
                 View Site
               </a>
+              {session?.role === 'superuser' && (
+                <a
+                  href="/admin/users"
+                  className="text-sm border ml-2 border-terracotta/30 text-terracotta px-3 py-1.5 rounded-lg hover:bg-terracotta hover:text-white transition-colors"
+                >
+                  Manage Admins
+                </a>
+              )}
+              <div className="flex items-center gap-2 mr-4 ml-6">
+                <span className="text-xs text-soft-brown/60 dark:text-warm-beige/60 hidden sm:inline">
+                  {session?.email}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-soft-brown/10 text-soft-brown/80 dark:bg-warm-beige/10 dark:text-warm-beige/80 uppercase font-bold tracking-wider">
+                  {session?.role}
+                </span>
+              </div>
               <button
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="flex items-center gap-2 text-sm text-soft-brown/60 dark:text-warm-beige/60 hover:text-red-500 transition-colors"
               >
                 <LogOut size={16} />
@@ -208,22 +273,20 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleTogglePublish(event)}
-                            className={`p-1.5 rounded-lg transition-colors ${
-                              event.is_published
-                                ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
-                                : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
-                            }`}
+                            className={`p-1.5 rounded-lg transition-colors ${event.is_published
+                              ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
+                              : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
+                              }`}
                             title={event.is_published ? 'Published' : 'Draft'}
                           >
                             {event.is_published ? <Eye size={14} /> : <EyeOff size={14} />}
                           </button>
                           <button
                             onClick={() => handleToggleFeatured(event)}
-                            className={`p-1.5 rounded-lg transition-colors ${
-                              event.is_featured
-                                ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30'
-                                : 'bg-gray-100 text-gray-400 dark:bg-gray-800'
-                            }`}
+                            className={`p-1.5 rounded-lg transition-colors ${event.is_featured
+                              ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30'
+                              : 'bg-gray-100 text-gray-400 dark:bg-gray-800'
+                              }`}
                             title={event.is_featured ? 'Featured' : 'Not featured'}
                           >
                             <Star size={14} />

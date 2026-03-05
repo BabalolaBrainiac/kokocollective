@@ -6,12 +6,13 @@ import { getEventById } from '@/lib/supabase'
 import { formatDate, formatTime, formatCurrency } from '@/lib/utils'
 
 interface EventPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: EventPageProps) {
-  const event = await getEventById(params.id)
-  
+  const resolvedParams = await params
+  const event = await getEventById(resolvedParams.id)
+
   if (!event) {
     return { title: 'Event Not Found | Koko Kollective' }
   }
@@ -28,7 +29,8 @@ export async function generateMetadata({ params }: EventPageProps) {
 }
 
 export default async function EventPage({ params }: EventPageProps) {
-  const event = await getEventById(params.id)
+  const resolvedParams = await params
+  const event = await getEventById(resolvedParams.id)
 
   if (!event) {
     notFound()
@@ -83,11 +85,11 @@ export default async function EventPage({ params }: EventPageProps) {
                 </span>
               )}
             </div>
-            
+
             <h1 className="font-serif text-3xl md:text-5xl font-semibold text-mocha-brown dark:text-warm-beige mb-4">
               {event.title}
             </h1>
-            
+
             <p className="text-lg text-soft-brown/70 dark:text-warm-beige/70">
               {event.short_description}
             </p>
@@ -184,7 +186,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   {event.price === 0 ? 'Free' : formatCurrency(event.price, event.currency)}
                 </p>
               </div>
-              
+
               {event.eventbrite_url ? (
                 <a
                   href={event.eventbrite_url}

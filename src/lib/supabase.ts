@@ -97,83 +97,7 @@ export async function getEventById(id: string): Promise<Event | null> {
   }
 }
 
-export async function createEvent(event: EventFormData): Promise<Event | null> {
-  const client = getSupabase()
-  if (!client) {
-    console.warn('supabase not configured')
-    return null
-  }
-
-  try {
-    const { data, error } = await client
-      .from('events')
-      .insert([{ ...event, spots_remaining: event.capacity }])
-      .select()
-      .single()
-
-    if (error) {
-      console.error('error creating event:', error)
-      return null
-    }
-
-    return data
-  } catch (err) {
-    console.error('error creating event:', err)
-    return null
-  }
-}
-
-export async function updateEvent(id: string, event: Partial<EventFormData>): Promise<Event | null> {
-  const client = getSupabase()
-  if (!client) {
-    console.warn('supabase not configured')
-    return null
-  }
-
-  try {
-    const { data, error } = await client
-      .from('events')
-      .update(event)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('error updating event:', error)
-      return null
-    }
-
-    return data
-  } catch (err) {
-    console.error('error updating event:', err)
-    return null
-  }
-}
-
-export async function deleteEvent(id: string): Promise<boolean> {
-  const client = getSupabase()
-  if (!client) {
-    console.warn('supabase not configured')
-    return false
-  }
-
-  try {
-    const { error } = await client
-      .from('events')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('error deleting event:', error)
-      return false
-    }
-
-    return true
-  } catch (err) {
-    console.error('error deleting event:', err)
-    return false
-  }
-}
+// removed createEvent, updateEvent, deleteEvent because they are now server actions
 
 // image uploads
 export async function uploadImage(file: File, path: string): Promise<string | null> {
@@ -234,3 +158,56 @@ export async function deleteImage(url: string): Promise<boolean> {
     return false
   }
 }
+
+// contact messages
+export async function getContactMessages() {
+  const client = getSupabase()
+  if (!client) {
+    console.warn('supabase not configured')
+    return []
+  }
+
+  try {
+    const { data, error } = await client
+      .from('contact_messages')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('error fetching messages:', error)
+      return []
+    }
+
+    return data || []
+  } catch (err) {
+    console.error('error fetching messages:', err)
+    return []
+  }
+}
+
+export async function updateMessageStatus(id: string, status: 'read' | 'unread') {
+  const client = getSupabase()
+  if (!client) {
+    console.warn('supabase not configured')
+    return false
+  }
+
+  try {
+    // @ts-ignore - bypassing untyped supabase schema
+    const { error } = await (client as any)
+      .from('contact_messages')
+      .update({ status })
+      .eq('id', id)
+
+    if (error) {
+      console.error('error updating message status:', error)
+      return false
+    }
+
+    return true
+  } catch (err) {
+    console.error('error updating message status:', err)
+    return false
+  }
+}
+

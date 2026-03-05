@@ -1,4 +1,5 @@
 import { Mail, MapPin, Instagram, Clock } from 'lucide-react'
+import { ContactForm } from '@/components/contact-form'
 
 export const metadata = {
   title: 'Contact | Koko Kollective',
@@ -16,7 +17,7 @@ export default function ContactPage() {
             Contact Us
           </h1>
           <p className="text-lg text-soft-brown/70 dark:text-warm-beige/70 max-w-2xl mx-auto">
-            Have a question, partnership idea, or just want to say hello? 
+            Have a question, partnership idea, or just want to say hello?
             We&apos;d love to hear from you.
           </p>
         </div>
@@ -82,72 +83,7 @@ export default function ContactPage() {
               <h2 className="font-serif text-2xl font-semibold text-mocha-brown dark:text-warm-beige mb-6">
                 Send us a message
               </h2>
-              
-              <form className="space-y-6" action="mailto:hello@kokokollective.com" method="post" encType="text/plain">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-mocha-brown dark:text-warm-beige mb-2">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      className="w-full px-4 py-3 rounded-xl border border-warm-beige dark:border-dark-warm-beige bg-white dark:bg-dark-warm-beige text-soft-brown dark:text-warm-beige focus:outline-none focus:ring-2 focus:ring-terracotta/50"
-                      placeholder="Your name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-mocha-brown dark:text-warm-beige mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      className="w-full px-4 py-3 rounded-xl border border-warm-beige dark:border-dark-warm-beige bg-white dark:bg-dark-warm-beige text-soft-brown dark:text-warm-beige focus:outline-none focus:ring-2 focus:ring-terracotta/50"
-                      placeholder="your@email.com"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-mocha-brown dark:text-warm-beige mb-2">
-                    Subject
-                  </label>
-                  <select
-                    id="subject"
-                    name="subject"
-                    className="w-full px-4 py-3 rounded-xl border border-warm-beige dark:border-dark-warm-beige bg-white dark:bg-dark-warm-beige text-soft-brown dark:text-warm-beige focus:outline-none focus:ring-2 focus:ring-terracotta/50"
-                  >
-                    <option value="General Enquiry">General Enquiry</option>
-                    <option value="Event Question">Event Question</option>
-                    <option value="Partnership">Partnership</option>
-                    <option value="Press">Press</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-mocha-brown dark:text-warm-beige mb-2">
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={5}
-                    className="w-full px-4 py-3 rounded-xl border border-warm-beige dark:border-dark-warm-beige bg-white dark:bg-dark-warm-beige text-soft-brown dark:text-warm-beige focus:outline-none focus:ring-2 focus:ring-terracotta/50 resize-none"
-                    placeholder="How can we help?"
-                    required
-                  />
-                </div>
-
-                <button type="submit" className="btn-primary w-full justify-center">
-                  Send Message
-                </button>
-              </form>
+              <ContactForm />
             </div>
           </div>
         </div>
@@ -166,8 +102,8 @@ export default function ContactPage() {
                 Who can attend Koko Kollective events?
               </h3>
               <p className="text-sm text-soft-brown/70 dark:text-warm-beige/70">
-                Our events are designed for BIPOC communities, diaspora attendees, Black queer individuals, 
-                and respectful allies. We create intentional spaces that centre BIPOC experiences while 
+                Our events are designed for BIPOC communities, diaspora attendees, Black queer individuals,
+                and respectful allies. We create intentional spaces that centre BIPOC experiences while
                 remaining welcoming to all who respect our values.
               </p>
             </div>
@@ -177,8 +113,8 @@ export default function ContactPage() {
                 Do I need experience for paint & sip sessions?
               </h3>
               <p className="text-sm text-soft-brown/70 dark:text-warm-beige/70">
-                Not at all! Our paint & sip sessions are designed for all skill levels. 
-                Our facilitators guide you through the process step by step, so whether 
+                Not at all! Our paint & sip sessions are designed for all skill levels.
+                Our facilitators guide you through the process step by step, so whether
                 you&apos;re a beginner or experienced artist, you&apos;ll have a great time.
               </p>
             </div>
@@ -188,8 +124,8 @@ export default function ContactPage() {
                 Can I get a refund if I can&apos;t attend?
               </h3>
               <p className="text-sm text-soft-brown/70 dark:text-warm-beige/70">
-                Refunds are available up to 7 days before the event. Within 7 days, 
-                we can offer a credit for a future event or transfer your ticket to 
+                Refunds are available up to 7 days before the event. Within 7 days,
+                we can offer a credit for a future event or transfer your ticket to
                 another person. Please contact us for assistance.
               </p>
             </div>
@@ -199,8 +135,8 @@ export default function ContactPage() {
                 Do you host private events?
               </h3>
               <p className="text-sm text-soft-brown/70 dark:text-warm-beige/70">
-                Yes! We love hosting private events for birthdays, team building, 
-                celebrations, and more. Get in touch with us to discuss your requirements 
+                Yes! We love hosting private events for birthdays, team building,
+                celebrations, and more. Get in touch with us to discuss your requirements
                 and we&apos;ll create a bespoke experience for your group.
               </p>
             </div>

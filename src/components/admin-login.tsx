@@ -1,26 +1,35 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { Lock, Mail, Eye, EyeOff } from 'lucide-react'
+import { loginAction } from '@/app/admin/actions'
+import { useRouter } from 'next/navigation'
 
-interface AdminLoginProps {
-  onLogin: (email: string, password: string) => boolean
-}
-
-export function AdminLogin({ onLogin }: AdminLoginProps) {
+export function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    
-    const success = onLogin(email, password)
-    if (!success) {
-      setError('Invalid email or password')
-    }
+
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.append('email', email)
+      formData.append('password', password)
+
+      const result = await loginAction(formData)
+      if (result.error) {
+        setError(result.error)
+      } else {
+        // Force server components to re-evaluate auth status
+        router.refresh()
+      }
+    })
   }
 
   return (
@@ -93,14 +102,15 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
 
             <button
               type="submit"
-              className="w-full btn-primary justify-center"
+              disabled={isPending}
+              className="w-full btn-primary justify-center disabled:opacity-50"
             >
-              Sign In
+              {isPending ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
           <p className="text-xs text-center text-soft-brown/40 dark:text-warm-beige/40 mt-6">
-            Default: admin@kokokollective.com / admin123
+            Secure Argon2 Authentication
           </p>
         </div>
 
