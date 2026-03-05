@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply text-soft-brown dark:text-warm-beige antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+/* custom scrollbar */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* animation utilities */
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animate-delay-400 {
+  animation-delay: 400ms;
+}
+
+/* image hover effects */
+.image-hover-zoom {
+  @apply overflow-hidden;
+}
+
+.image-hover-zoom img {
+  @apply transition-transform duration-500 ease-out;
+}
+
+.image-hover-zoom:hover img {
+  @apply scale-105;
+}
+
+/* button styles */
+.btn-primary {
+  @apply bg-terracotta hover:bg-terracotta/90 text-white px-6 py-3 rounded-full 
+         font-medium transition-all duration-300 inline-flex items-center gap-2
+         hover:shadow-lg hover:-translate-y-0.5;
+}
+
+.btn-secondary {
+  @apply bg-mocha-brown hover:bg-mocha-brown/90 text-white px-6 py-3 rounded-full 
+         font-medium transition-all duration-300 inline-flex items-center gap-2
+         hover:shadow-lg hover:-translate-y-0.5;
+}
+
+.btn-outline {
+  @apply border-2 border-mocha-brown dark:border-warm-beige text-mocha-brown dark:text-warm-beige 
+         hover:bg-mocha-brown hover:text-white dark:hover:bg-warm-beige dark:hover:text-dark-cream
+         px-6 py-3 rounded-full font-medium transition-all duration-300 inline-flex items-center gap-2;
+}
+
+/* card styles */
+.card {
+  @apply bg-white dark:bg-dark-warm-beige rounded-2xl overflow-hidden shadow-sm 
+         hover:shadow-xl transition-all duration-300;
+}
+
+/* section styles */
+.section-padding {
+  @apply py-16 md:py-24 px-4 sm:px-6 lg:px-8;
+}
+
+/* text gradient */
+.text-gradient {
+  @apply bg-gradient-to-r from-mocha-brown to-terracotta bg-clip-text text-transparent;
+}
