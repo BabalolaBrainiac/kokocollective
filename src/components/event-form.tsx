@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { X, Upload, Image as ImageIcon, XCircle } from 'lucide-react'
+import { X, Upload, Image as ImageIcon, XCircle, Link as LinkIcon } from 'lucide-react'
 import { Event, EventFormData } from '@/types'
 import { uploadImage } from '@/lib/supabase'
 import { createEventAction, updateEventAction } from '@/app/admin/events/actions'
+import { getR2ImageUrl } from '@/lib/r2'
 
 interface EventFormProps {
   event: Event | null
@@ -42,8 +43,14 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
 
   const [featuredImage, setFeaturedImage] = useState<File | null>(null)
   const [featuredImagePreview, setFeaturedImagePreview] = useState<string | null>(event?.featured_image || null)
+  const [useR2ForFeatured, setUseR2ForFeatured] = useState(false)
+  const [r2FeaturedFilename, setR2FeaturedFilename] = useState('')
+
   const [galleryImages, setGalleryImages] = useState<File[]>([])
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>(event?.gallery_images || [])
+  const [useR2ForGallery, setUseR2ForGallery] = useState(false)
+  const [r2GalleryFilename, setR2GalleryFilename] = useState('')
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -55,6 +62,16 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     if (file) {
       setFeaturedImage(file)
       setFeaturedImagePreview(URL.createObjectURL(file))
+      setUseR2ForFeatured(false)
+    }
+  }
+
+  const handleR2FeaturedSubmit = () => {
+    if (r2FeaturedFilename) {
+      const url = getR2ImageUrl(r2FeaturedFilename)
+      setFeaturedImagePreview(url)
+      setFeaturedImage(null)
+      setR2FeaturedFilename('')
     }
   }
 
@@ -67,6 +84,14 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     }
   }
 
+  const handleR2GallerySubmit = () => {
+    if (r2GalleryFilename) {
+      const url = getR2ImageUrl(r2GalleryFilename)
+      setGalleryPreviews([...galleryPreviews, url])
+      setR2GalleryFilename('')
+    }
+  }
+
   const removeGalleryImage = (index: number) => {
     const newImages = [...galleryImages]
     const newPreviews = [...galleryPreviews]
@@ -74,7 +99,9 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     // if it's a file that hasn't been uploaded yet
     if (index < galleryImages.length) {
       newImages.splice(index, 1)
-      URL.revokeObjectURL(galleryPreviews[index])
+      if (galleryPreviews[index].startsWith('blob:')) {
+        URL.revokeObjectURL(galleryPreviews[index])
+      }
     }
 
     newPreviews.splice(index, 1)
@@ -88,16 +115,16 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     setError('')
 
     try {
-      let featuredImageUrl = event?.featured_image || ''
+      let featuredImageUrl = featuredImagePreview || ''
       let galleryImageUrls = [...galleryPreviews.filter(url => !url.startsWith('blob:'))]
 
-      // upload featured image
+      // upload featured image if it's a new file
       if (featuredImage) {
         const url = await uploadImage(featuredImage, 'featured')
         if (url) featuredImageUrl = url
       }
 
-      // upload gallery images
+      // upload gallery images if they are new files
       for (const file of galleryImages) {
         const url = await uploadImage(file, 'gallery')
         if (url) galleryImageUrls.push(url)
@@ -325,54 +352,116 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
 
             {/* featured image */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-mocha-brown dark:text-warm-beige mb-2">
-                Featured Image
-              </label>
-              <input
-                ref={featuredInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFeaturedImageChange}
-                className="hidden"
-              />
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-mocha-brown dark:text-warm-beige">
+                  Featured Image
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setUseR2ForFeatured(!useR2ForFeatured)}
+                  className="text-xs text-terracotta hover:underline flex items-center gap-1"
+                >
+                  <LinkIcon size={12} />
+                  {useR2ForFeatured ? 'Upload instead' : 'Use R2 filename'}
+                </button>
+              </div>
 
-              {featuredImagePreview ? (
-                <div className="relative inline-block">
-                  <img
-                    src={featuredImagePreview}
-                    alt="Featured"
-                    className="w-48 h-32 object-cover rounded-xl"
+              {useR2ForFeatured ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={r2FeaturedFilename}
+                    onChange={(e) => setR2FeaturedFilename(e.target.value)}
+                    className="flex-1 px-4 py-3 rounded-xl border border-warm-beige dark:border-dark-warm-beige bg-cream dark:bg-dark-cream text-soft-brown dark:text-warm-beige focus:outline-none focus:ring-2 focus:ring-terracotta/50"
+                    placeholder="e.g., event-image.jpg"
                   />
                   <button
                     type="button"
-                    onClick={() => {
-                      setFeaturedImage(null)
-                      setFeaturedImagePreview(null)
-                    }}
-                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    onClick={handleR2FeaturedSubmit}
+                    className="px-4 py-2 bg-mocha-brown text-white rounded-xl hover:bg-soft-brown transition-colors"
                   >
-                    <XCircle size={16} />
+                    Set
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => featuredInputRef.current?.click()}
-                  className="flex items-center gap-3 px-6 py-4 border-2 border-dashed border-warm-beige dark:border-dark-warm-beige rounded-xl hover:border-terracotta dark:hover:border-terracotta transition-colors"
-                >
-                  <ImageIcon size={24} className="text-soft-brown/40" />
-                  <span className="text-sm text-soft-brown/60 dark:text-warm-beige/60">
-                    Click to upload featured image
-                  </span>
-                </button>
+                <>
+                  <input
+                    ref={featuredInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFeaturedImageChange}
+                    className="hidden"
+                  />
+
+                  {featuredImagePreview ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={featuredImagePreview}
+                        alt="Featured"
+                        className="w-48 h-32 object-cover rounded-xl"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFeaturedImage(null)
+                          setFeaturedImagePreview(null)
+                        }}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <XCircle size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => featuredInputRef.current?.click()}
+                      className="flex items-center gap-3 px-6 py-4 border-2 border-dashed border-warm-beige dark:border-dark-warm-beige rounded-xl hover:border-terracotta dark:hover:border-terracotta transition-colors"
+                    >
+                      <ImageIcon size={24} className="text-soft-brown/40" />
+                      <span className="text-sm text-soft-brown/60 dark:text-warm-beige/60">
+                        Click to upload featured image
+                      </span>
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
             {/* gallery images */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-mocha-brown dark:text-warm-beige mb-2">
-                Gallery Images
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-mocha-brown dark:text-warm-beige">
+                  Gallery Images
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setUseR2ForGallery(!useR2ForGallery)}
+                  className="text-xs text-terracotta hover:underline flex items-center gap-1"
+                >
+                  <LinkIcon size={12} />
+                  {useR2ForGallery ? 'Upload instead' : 'Add R2 filename'}
+                </button>
+              </div>
+
+              {useR2ForGallery && (
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={r2GalleryFilename}
+                    onChange={(e) => setR2GalleryFilename(e.target.value)}
+                    className="flex-1 px-4 py-3 rounded-xl border border-warm-beige dark:border-dark-warm-beige bg-cream dark:bg-dark-cream text-soft-brown dark:text-warm-beige focus:outline-none focus:ring-2 focus:ring-terracotta/50"
+                    placeholder="e.g., gallery-1.jpg"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleR2GallerySubmit}
+                    className="px-4 py-2 bg-mocha-brown text-white rounded-xl hover:bg-soft-brown transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+
               <input
                 ref={galleryInputRef}
                 type="file"
@@ -400,14 +489,16 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
                   </div>
                 ))}
 
-                <button
-                  type="button"
-                  onClick={() => galleryInputRef.current?.click()}
-                  className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-warm-beige dark:border-dark-warm-beige rounded-xl hover:border-terracotta dark:hover:border-terracotta transition-colors"
-                >
-                  <Upload size={20} className="text-soft-brown/40 mb-1" />
-                  <span className="text-xs text-soft-brown/40">Add</span>
-                </button>
+                {!useR2ForGallery && (
+                  <button
+                    type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-warm-beige dark:border-dark-warm-beige rounded-xl hover:border-terracotta dark:hover:border-terracotta transition-colors"
+                  >
+                    <Upload size={20} className="text-soft-brown/40 mb-1" />
+                    <span className="text-xs text-soft-brown/40">Add</span>
+                  </button>
+                )}
               </div>
             </div>
 

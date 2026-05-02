@@ -1,7 +1,9 @@
 import { Suspense } from 'react'
 import { getEvents } from '@/lib/supabase'
 import { EventCard } from '@/components/event-card'
+import { ExternalEventCard } from '@/components/external-event-card'
 import { EventsFilter } from '@/components/events-filter'
+import { featuredEventImage } from '@/lib/media'
 
 export const metadata = {
   title: 'Events | Koko Kollective',
@@ -30,9 +32,49 @@ export default async function EventsPage() {
         </div>
       </section>
 
-      {/* events grid */}
-      <section className="pb-24 px-4 sm:px-6 lg:px-8">
+      {/* eventbrite events — externally ticketed */}
+      <section className="pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <span className="text-terracotta text-sm font-medium uppercase tracking-wider">Ticketed</span>
+              <h2 className="font-serif text-2xl md:text-3xl font-semibold text-mocha-brown dark:text-warm-beige mt-1">
+                On Eventbrite
+              </h2>
+            </div>
+            <a
+              href="https://www.eventbrite.co.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-soft-brown/60 dark:text-warm-beige/60 hover:text-terracotta transition-colors"
+            >
+              View on Eventbrite
+            </a>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="eventbrite-events-grid">
+            <ExternalEventCard
+              title="MIND THE CROWN (Yoga & Paint Mini Retreat)"
+              description="A wellness experience blending movement, creativity, and Afro-diaspora culture. Ground, connect & reset with a yoga session, sound therapy, and an Afrobeat paint session. Centring BIPOC communities while welcoming all."
+              date="Sun, 24 May • 8:00 AM"
+              location="Pocket cafe bar, 98 Paradise Street, Liverpool L1 4AA"
+              price="£11.55 - £50"
+              category="Wellness & Creativity"
+              eventbriteUrl="https://www.eventbrite.co.uk/e/mind-the-crown-yoga-paint-mini-retreat-tickets-1985651293471?utm-campaign=social&utm-content=attendeeshare&utm-medium=discovery&utm-term=listing&utm-source=wsa&aff=ebdsshwebmobile"
+              imageUrl={featuredEventImage}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* events grid — from database */}
+      <section className="pb-24 px-4 sm:px-6 lg:px-8 bg-warm-beige/30 dark:bg-dark-warm-beige/30 pt-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <span className="text-terracotta text-sm font-medium uppercase tracking-wider">All Events</span>
+            <h2 className="font-serif text-2xl md:text-3xl font-semibold text-mocha-brown dark:text-warm-beige mt-1">
+              Community Calendar
+            </h2>
+          </div>
           <Suspense fallback={<EventsSkeleton />}>
             <EventsContent events={events} categories={categories} />
           </Suspense>

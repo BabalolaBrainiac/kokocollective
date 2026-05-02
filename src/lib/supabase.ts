@@ -18,57 +18,14 @@ export const supabase = getSupabase()
 
 // events
 export async function getEvents(): Promise<Event[]> {
-  const client = getSupabase()
-  if (!client) {
-    console.warn('supabase not configured')
-    return []
-  }
-
-  try {
-    const { data, error } = await client
-      .from('events')
-      .select('*')
-      .eq('is_published', true)
-      .order('date', { ascending: true })
-
-    if (error) {
-      console.error('error fetching events:', error)
-      return []
-    }
-
-    return data || []
-  } catch (err) {
-    console.error('error fetching events:', err)
-    return []
-  }
+  // Temporary bypass: The current Supabase DB points to Eyimofe Wellness instead of KokoKollective.
+  // Querying it causes a 5.2s timeout during SSR. We return empty array to prevent hanging the page.
+  return []
 }
 
 export async function getFeaturedEvents(): Promise<Event[]> {
-  const client = getSupabase()
-  if (!client) {
-    console.warn('supabase not configured')
-    return []
-  }
-
-  try {
-    const { data, error } = await client
-      .from('events')
-      .select('*')
-      .eq('is_published', true)
-      .eq('is_featured', true)
-      .order('date', { ascending: true })
-      .limit(3)
-
-    if (error) {
-      console.error('error fetching featured events:', error)
-      return []
-    }
-
-    return data || []
-  } catch (err) {
-    console.error('error fetching featured events:', err)
-    return []
-  }
+  // Temporary bypass to prevent 5.2s SSR hang
+  return []
 }
 
 export async function getEventById(id: string): Promise<Event | null> {

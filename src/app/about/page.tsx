@@ -1,5 +1,8 @@
 import Image from 'next/image'
 import { Heart, Users, Sparkles, Shield } from 'lucide-react'
+import { PhotoGallery } from '@/components/photo-gallery'
+import { LazyVideo } from '@/components/lazy-video'
+import { galleryImages, videos } from '@/lib/media'
 
 export const metadata = {
   title: 'About | Koko Kollective',
@@ -44,12 +47,14 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="relative">
-              <div className="aspect-[4/5] rounded-2xl bg-gradient-to-br from-sage-green/20 to-terracotta/20 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-mocha-brown/10 flex items-center justify-center">
-                    <Heart className="text-terracotta" size={40} />
-                  </div>
-                  <p className="font-serif text-2xl text-mocha-brown dark:text-warm-beige italic">
+              <div className="aspect-[4/5] rounded-2xl overflow-hidden relative group">
+                <LazyVideo 
+                  src={videos[0].src} 
+                  poster={videos[0].poster} 
+                  className="transition-transform duration-700 group-hover:scale-105" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-mocha-brown/60 to-transparent flex items-end pointer-events-none">
+                  <p className="font-serif text-2xl text-warm-beige italic p-6">
                     &ldquo;Connection through creativity&rdquo;
                   </p>
                 </div>
@@ -145,6 +150,17 @@ export default function AboutPage() {
             We focus on atmosphere, guided interaction, themed experiences and 
             comfortable socialising rather than nightlife-style partying.
           </p>
+        </div>
+      </section>
+
+      {/* photo gallery from R2 */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <PhotoGallery
+            images={galleryImages}
+            title="Inside Koko Kollective"
+            subtitle="Our Moments"
+          />
         </div>
       </section>
 
