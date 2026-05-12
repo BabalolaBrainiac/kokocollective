@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, LogOut, Calendar, Edit2, Trash2, Eye, EyeOff, Star, Mail, CheckCircle, Circle } from 'lucide-react'
+import { Plus, LogOut, Calendar, Edit2, Trash2, Eye, EyeOff, Star, Mail, CheckCircle, Circle, ImageIcon } from 'lucide-react'
 import { getEvents, getContactMessages, updateMessageStatus } from '@/lib/supabase'
 import { Event } from '@/types'
 import { EventForm } from './event-form'
+import { SiteMediaManager } from './site-media-manager'
 import { formatDate, formatCurrency } from '@/lib/utils'
 
 import { logoutAction } from '@/app/admin/actions'
@@ -23,7 +24,7 @@ export function AdminDashboard({ session }: AdminDashboardProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   // New States
-  const [activeTab, setActiveTab] = useState<'events' | 'messages'>('events')
+  const [activeTab, setActiveTab] = useState<'events' | 'messages' | 'media'>('events')
   const [messages, setMessages] = useState<any[]>([])
 
   const router = useRouter()
@@ -108,6 +109,16 @@ export function AdminDashboard({ session }: AdminDashboardProps) {
                   Events
                 </button>
                 <button
+                  onClick={() => setActiveTab('media')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${activeTab === 'media'
+                    ? 'bg-warm-beige/50 dark:bg-dark-warm-beige text-terracotta font-medium'
+                    : 'text-soft-brown/60 dark:text-warm-beige/60 hover:bg-warm-beige/30 dark:hover:bg-dark-warm-beige/30'
+                    }`}
+                >
+                  <ImageIcon size={14} className="inline mr-1" />
+                  Media
+                </button>
+                <button
                   onClick={() => setActiveTab('messages')}
                   className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${activeTab === 'messages'
                     ? 'bg-warm-beige/50 dark:bg-dark-warm-beige text-terracotta font-medium'
@@ -160,166 +171,224 @@ export function AdminDashboard({ session }: AdminDashboardProps) {
       </header>
 
       {/* main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white dark:bg-dark-warm-beige rounded-xl p-4">
-            <p className="text-xs text-soft-brown/60 dark:text-warm-beige/60 uppercase">Total Events</p>
-            <p className="text-2xl font-serif font-semibold text-mocha-brown dark:text-warm-beige">
-              {events.length}
-            </p>
-          </div>
-          <div className="bg-white dark:bg-dark-warm-beige rounded-xl p-4">
-            <p className="text-xs text-soft-brown/60 dark:text-warm-beige/60 uppercase">Published</p>
-            <p className="text-2xl font-serif font-semibold text-mocha-brown dark:text-warm-beige">
-              {events.filter(e => e.is_published).length}
-            </p>
-          </div>
-          <div className="bg-white dark:bg-dark-warm-beige rounded-xl p-4">
-            <p className="text-xs text-soft-brown/60 dark:text-warm-beige/60 uppercase">Featured</p>
-            <p className="text-2xl font-serif font-semibold text-mocha-brown dark:text-warm-beige">
-              {events.filter(e => e.is_featured).length}
-            </p>
-          </div>
-          <div className="bg-white dark:bg-dark-warm-beige rounded-xl p-4">
-            <p className="text-xs text-soft-brown/60 dark:text-warm-beige/60 uppercase">Drafts</p>
-            <p className="text-2xl font-serif font-semibold text-mocha-brown dark:text-warm-beige">
-              {events.filter(e => !e.is_published).length}
-            </p>
-          </div>
-        </div>
-
-        {/* actions */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-serif text-xl font-semibold text-mocha-brown dark:text-warm-beige">
-            Events
-          </h2>
-          <button
-            onClick={() => {
-              setEditingEvent(null)
-              setShowForm(true)
-            }}
-            className="btn-primary"
-          >
-            <Plus size={18} />
-            Add Event
-          </button>
-        </div>
-
-        {/* events table */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta" />
-          </div>
-        ) : events.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-dark-warm-beige rounded-xl">
-            <Calendar className="mx-auto mb-4 text-soft-brown/30" size={48} />
-            <p className="text-soft-brown/60 dark:text-warm-beige/60">
-              No events yet. Create your first event to get started.
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-dark-warm-beige rounded-xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-warm-beige/50 dark:bg-dark-warm-beige/50">
-                  <tr>
-                    <th className="text-left text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
-                      Event
-                    </th>
-                    <th className="text-left text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
-                      Date
-                    </th>
-                    <th className="text-left text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
-                      Price
-                    </th>
-                    <th className="text-left text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
-                      Status
-                    </th>
-                    <th className="text-right text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-warm-beige dark:divide-dark-warm-beige">
-                  {events.map((event) => (
-                    <tr key={event.id} className="hover:bg-warm-beige/20 dark:hover:bg-dark-warm-beige/20">
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          {event.featured_image && (
-                            <img
-                              src={event.featured_image}
-                              alt=""
-                              className="w-10 h-10 rounded-lg object-cover"
-                            />
-                          )}
-                          <div>
-                            <p className="font-medium text-mocha-brown dark:text-warm-beige">
-                              {event.title}
-                            </p>
-                            <p className="text-xs text-soft-brown/50 dark:text-warm-beige/50">
-                              {event.category}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-soft-brown/70 dark:text-warm-beige/70">
-                        {formatDate(event.date)}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-soft-brown/70 dark:text-warm-beige/70">
-                        {event.price === 0 ? 'Free' : formatCurrency(event.price, event.currency)}
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleTogglePublish(event)}
-                            className={`p-1.5 rounded-lg transition-colors ${event.is_published
-                              ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
-                              : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
-                              }`}
-                            title={event.is_published ? 'Published' : 'Draft'}
-                          >
-                            {event.is_published ? <Eye size={14} /> : <EyeOff size={14} />}
-                          </button>
-                          <button
-                            onClick={() => handleToggleFeatured(event)}
-                            className={`p-1.5 rounded-lg transition-colors ${event.is_featured
-                              ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30'
-                              : 'bg-gray-100 text-gray-400 dark:bg-gray-800'
-                              }`}
-                            title={event.is_featured ? 'Featured' : 'Not featured'}
-                          >
-                            <Star size={14} />
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingEvent(event)
-                              setShowForm(true)
-                            }}
-                            className="p-2 rounded-lg hover:bg-warm-beige dark:hover:bg-dark-warm-beige text-soft-brown/60 dark:text-warm-beige/60 hover:text-terracotta transition-colors"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(event.id)}
-                            className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-soft-brown/60 dark:text-warm-beige/60 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {activeTab === 'events' && (
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white dark:bg-dark-warm-beige rounded-xl p-4">
+              <p className="text-xs text-soft-brown/60 dark:text-warm-beige/60 uppercase">Total Events</p>
+              <p className="text-2xl font-serif font-semibold text-mocha-brown dark:text-warm-beige">
+                {events.length}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-dark-warm-beige rounded-xl p-4">
+              <p className="text-xs text-soft-brown/60 dark:text-warm-beige/60 uppercase">Published</p>
+              <p className="text-2xl font-serif font-semibold text-mocha-brown dark:text-warm-beige">
+                {events.filter(e => e.is_published).length}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-dark-warm-beige rounded-xl p-4">
+              <p className="text-xs text-soft-brown/60 dark:text-warm-beige/60 uppercase">Featured</p>
+              <p className="text-2xl font-serif font-semibold text-mocha-brown dark:text-warm-beige">
+                {events.filter(e => e.is_featured).length}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-dark-warm-beige rounded-xl p-4">
+              <p className="text-xs text-soft-brown/60 dark:text-warm-beige/60 uppercase">Drafts</p>
+              <p className="text-2xl font-serif font-semibold text-mocha-brown dark:text-warm-beige">
+                {events.filter(e => !e.is_published).length}
+              </p>
             </div>
           </div>
-        )}
-      </main>
+
+          {/* actions */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-serif text-xl font-semibold text-mocha-brown dark:text-warm-beige">
+              Events
+            </h2>
+            <button
+              onClick={() => {
+                setEditingEvent(null)
+                setShowForm(true)
+              }}
+              className="btn-primary"
+            >
+              <Plus size={18} />
+              Add Event
+            </button>
+          </div>
+
+          {/* events table */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta" />
+            </div>
+          ) : events.length === 0 ? (
+            <div className="text-center py-12 bg-white dark:bg-dark-warm-beige rounded-xl">
+              <Calendar className="mx-auto mb-4 text-soft-brown/30" size={48} />
+              <p className="text-soft-brown/60 dark:text-warm-beige/60">
+                No events yet. Create your first event to get started.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-dark-warm-beige rounded-xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-warm-beige/50 dark:bg-dark-warm-beige/50">
+                    <tr>
+                      <th className="text-left text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
+                        Event
+                      </th>
+                      <th className="text-left text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
+                        Date
+                      </th>
+                      <th className="text-left text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
+                        Price
+                      </th>
+                      <th className="text-left text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
+                        Status
+                      </th>
+                      <th className="text-right text-xs font-medium text-soft-brown/60 dark:text-warm-beige/60 uppercase tracking-wider px-4 py-3">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-warm-beige dark:divide-dark-warm-beige">
+                    {events.map((event) => (
+                      <tr key={event.id} className="hover:bg-warm-beige/20 dark:hover:bg-dark-warm-beige/20">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-3">
+                            {event.featured_image && (
+                              <img
+                                src={event.featured_image}
+                                alt=""
+                                className="w-10 h-10 rounded-lg object-cover"
+                              />
+                            )}
+                            <div>
+                              <p className="font-medium text-mocha-brown dark:text-warm-beige">
+                                {event.title}
+                              </p>
+                              <p className="text-xs text-soft-brown/50 dark:text-warm-beige/50">
+                                {event.category}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-soft-brown/70 dark:text-warm-beige/70">
+                          {formatDate(event.date)}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-soft-brown/70 dark:text-warm-beige/70">
+                          {event.price === 0 ? 'Free' : formatCurrency(event.price, event.currency)}
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleTogglePublish(event)}
+                              className={`p-1.5 rounded-lg transition-colors ${event.is_published
+                                ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
+                                : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
+                                }`}
+                              title={event.is_published ? 'Published' : 'Draft'}
+                            >
+                              {event.is_published ? <Eye size={14} /> : <EyeOff size={14} />}
+                            </button>
+                            <button
+                              onClick={() => handleToggleFeatured(event)}
+                              className={`p-1.5 rounded-lg transition-colors ${event.is_featured
+                                ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30'
+                                : 'bg-gray-100 text-gray-400 dark:bg-gray-800'
+                                }`}
+                              title={event.is_featured ? 'Featured' : 'Not featured'}
+                            >
+                              <Star size={14} />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingEvent(event)
+                                setShowForm(true)
+                              }}
+                              className="p-2 rounded-lg hover:bg-warm-beige dark:hover:bg-dark-warm-beige text-soft-brown/60 dark:text-warm-beige/60 hover:text-terracotta transition-colors"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirm(event.id)}
+                              className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-soft-brown/60 dark:text-warm-beige/60 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </main>
+      )}
+
+      {activeTab === 'messages' && (
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white dark:bg-dark-warm-beige rounded-xl overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-warm-beige dark:border-dark-warm-beige">
+              <h2 className="font-serif text-xl font-semibold text-mocha-brown dark:text-warm-beige">
+                Contact Messages
+              </h2>
+            </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta" />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center py-12">
+                <Mail className="mx-auto mb-4 text-soft-brown/30" size={48} />
+                <p className="text-soft-brown/60 dark:text-warm-beige/60">No messages yet.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-warm-beige dark:divide-dark-warm-beige">
+                {messages.map((msg: any) => (
+                  <div key={msg.id} className="p-4 hover:bg-warm-beige/10 dark:hover:bg-dark-warm-beige/10">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-medium text-mocha-brown dark:text-warm-beige">{msg.name}</p>
+                        <p className="text-sm text-soft-brown/60 dark:text-warm-beige/60">{msg.email}</p>
+                      </div>
+                      <button
+                        onClick={() => handleToggleMessageStatus(msg.id, msg.status)}
+                        className="p-1.5 rounded-lg hover:bg-warm-beige dark:hover:bg-dark-warm-beige transition-colors"
+                      >
+                        {msg.status === 'unread' ? (
+                          <Circle size={16} className="text-terracotta" />
+                        ) : (
+                          <CheckCircle size={16} className="text-sage-green" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-sm font-medium text-mocha-brown dark:text-warm-beige mb-1">{msg.subject}</p>
+                    <p className="text-sm text-soft-brown/70 dark:text-warm-beige/70 whitespace-pre-wrap">{msg.message}</p>
+                    <p className="text-xs text-soft-brown/40 dark:text-warm-beige/40 mt-2">
+                      {new Date(msg.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </main>
+      )}
+
+      {activeTab === 'media' && (
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <SiteMediaManager />
+        </main>
+      )}
 
       {/* event form modal */}
       {showForm && (

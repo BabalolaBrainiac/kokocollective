@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { X, Upload, Image as ImageIcon, XCircle, Link as LinkIcon } from 'lucide-react'
 import { Event, EventFormData } from '@/types'
-import { uploadImage } from '@/lib/supabase'
+import { uploadToR2, uploadMultipleToR2 } from '@/app/admin/media/actions'
 import { createEventAction, updateEventAction } from '@/app/admin/events/actions'
 import { getR2ImageUrl } from '@/lib/r2'
 
@@ -116,18 +116,24 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
 
     try {
       let featuredImageUrl = featuredImagePreview || ''
-      let galleryImageUrls = [...galleryPreviews.filter(url => !url.startsWith('blob:'))]
+      const galleryImageUrls = [...galleryPreviews.filter(url => !url.startsWith('blob:'))]
 
-      // upload featured image if it's a new file
       if (featuredImage) {
-        const url = await uploadImage(featuredImage, 'featured')
-        if (url) featuredImageUrl = url
+        const fd = new FormData()
+        fd.append('file', featuredImage)
+        fd.append('folder', 'kokokollective')
+        const result = await uploadToR2(fd)
+        if (result.url) featuredImageUrl = result.url
       }
 
-      // upload gallery images if they are new files
-      for (const file of galleryImages) {
-        const url = await uploadImage(file, 'gallery')
-        if (url) galleryImageUrls.push(url)
+      if (galleryImages.length > 0) {
+        const fd = new FormData()
+        for (const file of galleryImages) {
+          fd.append('files', file)
+        }
+        fd.append('folder', 'kokokollective')
+        const result = await uploadMultipleToR2(fd)
+        if (result.urls) galleryImageUrls.push(...result.urls)
       }
 
       const eventData = {

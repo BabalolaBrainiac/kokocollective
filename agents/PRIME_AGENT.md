@@ -37,6 +37,15 @@ when kokokollective changes:
 1. update this PRIME_AGENT.md
 2. update workspace PROJECTS_AGENT.md
 
+## universal standards
+
+all implementations must follow:
+1. **no verbosity** — code is self-documenting; explain the "why", never the "what"
+2. **minimal comments** — short, lowercase, single-line; only when necessary
+3. **optimal complexity** — best space-time complexity; no naive solutions
+4. **security embedded** — azath enforces no hardcoded secrets; PII over TLS only; hash/redact financial data; transactions for multi-row ops
+5. **principal-engineer bar** — every line must meet staff+ engineer quality
+
 ---
 
 *kokokollective prime agent - last updated: 2026-04-06*
